@@ -1,0 +1,53 @@
+function doGet(e) {
+  var user = getSesion();
+  if (user) {
+    return HtmlService.createTemplateFromFile('home').evaluate();
+  }
+  return HtmlService.createTemplateFromFile('login').evaluate();
+}
+
+function validarUsuario(rut, password) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('usuarios');
+  var data = sheet.getDataRange().getValues();
+  
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][1] == rut && data[i][5] == password) {
+      var userData = {
+        id: data[i][0],
+        rut: data[i][1],
+        nombre: data[i][2],
+        correo: data[i][3],
+        rol: data[i][4],
+        estado: data[i][6]
+      };
+      guardarSesion(userData);
+      return { success: true, user: userData };
+    }
+  }
+  return { success: false, message: 'RUT o contraseña incorrectos' };
+}
+
+function guardarSesion(userData) {
+  var userProperties = PropertiesService.getUserProperties();
+  userProperties.setProperty('user', JSON.stringify(userData));
+}
+
+function getSesion() {
+  var userProperties = PropertiesService.getUserProperties();
+  var user = userProperties.getProperty('user');
+  return user ? JSON.parse(user) : null;
+}
+
+function logout() {
+    var cache = CacheService.getUserCache();
+    cache.remove("usuario"); // Borra la sesión
+}
+
+
+function cargarHome() {
+  var user = getSesion();
+  if (user) {
+    return HtmlService.createTemplateFromFile('home').evaluate();
+  }
+  return HtmlService.createTemplateFromFile('login').evaluate();
+}
